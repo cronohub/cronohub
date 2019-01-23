@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import time
 import sys
 from collections import namedtuple
 from importlib import import_module
@@ -80,7 +81,9 @@ def download_and_archive(repo_url: Repourl):
     to map to.
     """
     url, name = repo_url
-    target = Path.cwd() / "target" / name
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    filename = "{}_{}.zip".format(name, timestr)
+    target = Path.cwd() / "target" / filename
     logger.info("downloading: %s, to: %s with url: %s" % (name, target, url))
     urlretrieve(url, target)
     archive(str(target))
@@ -107,7 +110,7 @@ def main():
     The main of cronohub. Gathers the list of repositories to archive
     and filters them based on a `.repos_list` file that can be located
     under `~/.config/cronohub/.repo_list`. This file contains a list
-    of repository names which the user wishes to syncronize. Anything else
+    of repository names which the user wishes to archive. Anything else
     will be ignored.
     :return: None
     """
@@ -145,7 +148,7 @@ def main():
     if len(only) > 0:
         repos = list(filter(lambda r: r.name in only, repos))
 
-    logger.info('Gathering urls for %d repositories.' % len(repos))
+    logger.info('Gathering archive urls for %d repositories.' % len(repos))
     urls = gather_archive_urls(repos)
     logger.info('Downloading archives.')
     download_and_archive_urls(urls)
