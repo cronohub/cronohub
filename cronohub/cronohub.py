@@ -71,6 +71,7 @@ def archive(f: str):
     """
     Archive uses the set plugin to archive a file located at `f`.
     """
+    logger.info("archiving %s with plugin %s" % (f, args.plugin))
     archiver_plugin.archive(f)
 
 def download_and_archive(repo_url: Repourl):

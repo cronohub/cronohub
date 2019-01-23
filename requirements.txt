@@ -1,2 +1,4 @@
 PyGithub
 colored
+scp
+paramiko
