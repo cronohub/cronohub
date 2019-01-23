@@ -51,7 +51,7 @@ def gather_archive_urls(repos: List[Repository.Repository]) -> List[Repourl]:
 
 def load_plugin():
     global archiver_plugin
-    filepath = pkg_resources.resource_filename('plugins', '.')
+    filepath = pkg_resources.resource_filename('cronohub_plugins', '.')
     path = Path(filepath)
     found = False
     plugin = ''
@@ -65,7 +65,7 @@ def load_plugin():
         print('plugin %s not found in plugins' % args.plugin)
         sys.exit(1)
 
-    archiver_plugin = import_module("plugins." + args.plugin, plugin)
+    archiver_plugin = import_module("cronohub_plugins." + args.plugin, plugin)
 
 def archive(f: str):
     """

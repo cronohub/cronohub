@@ -33,7 +33,6 @@ setup(
     ],
     keywords='cli,git',
     packages=find_packages(exclude=['docs', 'test*']),
-    package_data={'plugins': ['plugins/*.py']},
     install_requires=['PyGithub', 'setuptools', 'wheel'],
     entry_points={
         'console_scripts': [
