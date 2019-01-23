@@ -106,13 +106,13 @@ def main():
     """
     The main of cronohub. Gathers the list of repositories to archive
     and filters them based on a `.repos_list` file that can be located
-    under `~/.config/fsyncer/.repo_list`. This file contains a list
+    under `~/.config/cronohub/.repo_list`. This file contains a list
     of repository names which the user wishes to syncronize. Anything else
     will be ignored.
     :return: None
     """
     swag = """
-	_______  ______    _______  __    _  _______  __   __  __   __  _______
+	 _______  ______    _______  __    _  _______  __   __  __   __  _______
 	|       ||    _ |  |       ||  |  | ||       ||  | |  ||  | |  ||  _    |
 	|       ||   | ||  |   _   ||   |_| ||   _   ||  |_|  ||  | |  || |_|   |
 	|       ||   |_||_ |  | |  ||       ||  | |  ||       ||  |_|  ||       |
