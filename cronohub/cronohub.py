@@ -1,6 +1,7 @@
 import os
 import logging
 import sys
+import argparse
 from collections import namedtuple
 from colored import fg, bg, attr
 from github import Github, Repository
@@ -18,6 +19,9 @@ logging.basicConfig(filename='cronohub.log',
                     level=logging.INFO)
 logger = logging.getLogger('cronohub_logger')
 Repourl = namedtuple('Repourl', ['url', 'name'])
+parser = argparse.ArgumentParser(description='Cronohub')
+parser.add_argument('-a', action="store", default="scp", type=str, dest="plugin")
+args = parser.parse_args()
 
 def get_repo_list() -> List[Repository.Repository]:
     """
@@ -42,26 +46,33 @@ def gather_archive_urls(repos: List[Repository.Repository]) -> List[Repourl]:
     """
     return list(map(lambda r: Repourl(url=r.get_archive_link(archive_format="zipball"), name=r.name), repos))
 
-def download(repo_url):
+def download_and_archive(repo_url: Repourl):
     """
     Download a single URL. This is used by `download_urls` as the function
     to map to.
     """
     url, name = repo_url
     target = Path.cwd() / "target" / name
-    print("downloading: %s, to: %s" % (name, target.name))
+    logger.info("downloading: %s, to: %s with url: %s" % (name, target, url))
     # urlretrieve(url, target)
 
-def download_urls(urls: List[str]):
+
+def download_and_archive_urls(urls: List[Repourl]):
     """
-    Multithreaded url downloader.
+    Multithreaded url downloader and archiver. As soon as a url is finished
+    downloading it will be sent to the archiver function. Essentially this will
+    also allow for multithreaded archiving. We could separate the two processes
+    and configure the archiving with a higher thread count, but since the bottleneck
+    would be the github api and downloading process it makes sense to upload as soon
+    as a download is finished instead of waiting for them all to finish and then
+    upload at a higher thread count.
     """
     target = Path.cwd() / "target"
     if not target.exists():
         os.makedirs(target)
 
     with Pool(5) as p:
-        p.map(download, urls)
+        p.map(download_and_archive, urls)
 
 def main():
     """
@@ -105,4 +116,5 @@ def main():
     logger.info('Gathering urls for %d repositories.' % len(repos))
     urls = gather_archive_urls(repos)
     logger.info('Downloading archives.')
-    download_urls(urls)
+    download_and_archive_urls(urls)
+    logger.info('All done. Good bye.')
