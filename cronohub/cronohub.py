@@ -2,6 +2,7 @@ import os
 import logging
 import sys
 from collections import namedtuple
+from colored import fg, bg, attr
 from github import Github, Repository
 from multiprocessing import Pool
 from pathlib import Path
@@ -27,7 +28,7 @@ def get_repo_list() -> List[Repository.Repository]:
     :return: List[Repository.Repository]
         A list of remote forks for the current user.
     """
-    g = Github(os.environ['FSYNC_GITHUB_TOKEN'])
+    g = Github(os.environ['CRONO_GITHUB_TOKEN'])
     repos = []
     user = g.get_user()
     for repo in user.get_repos(type="owner"):
@@ -47,18 +48,18 @@ def download(repo_url):
     to map to.
     """
     url, name = repo_url
-    base = os.getcwd()
-    target = Path.joinpath(base, "target", name + ".zip")
-    urlretrieve(url, target)
+    target = Path.cwd() / "target" / name
+    print("downloading: %s, to: %s" % (name, target.name))
+    # urlretrieve(url, target)
 
 def download_urls(urls: List[str]):
     """
     Multithreaded url downloader.
     """
-    base = os.getcwd()
-    target = Path.joinpath(base, "target")
-    if not os.path.exists(target):
+    target = Path.cwd() / "target"
+    if not target.exists():
         os.makedirs(target)
+
     with Pool(5) as p:
         p.map(download, urls)
 
@@ -71,7 +72,7 @@ def main():
     will be ignored.
     :return: None
     """
-    print(r'''
+    swag = """
 	_______  ______    _______  __    _  _______  __   __  __   __  _______
 	|       ||    _ |  |       ||  |  | ||       ||  | |  ||  | |  ||  _    |
 	|       ||   | ||  |   _   ||   |_| ||   _   ||  |_|  ||  | |  || |_|   |
@@ -81,7 +82,8 @@ def main():
 	|_______||___|  |_||_______||_|  |__||_______||__| |__||_______||_______|
 
     Beginning archiving...
-    ''')
+    """
+    print('%s %s %s' % (fg('cyan'), swag, attr('reset')))
 
     if "CRONO_GITHUB_TOKEN" not in os.environ:
         print("Please set up a token by CRONO_GITHUB_TOKEN=<token>.")
