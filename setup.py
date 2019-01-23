@@ -11,6 +11,7 @@ with open("README.rst", "r") as fh:
 setup(
     name='cronohub',
     version=__version__,
+    include_package_data=True,
     description='Archive your github repositories to anywhere you want.',
     long_description=long_description,
     url='https://github.com/cronohub',
@@ -32,7 +33,8 @@ setup(
     ],
     keywords='cli,git',
     packages=find_packages(exclude=['docs', 'test*']),
-    install_requires=['PyGithub'],
+    package_data={'plugins': ['plugins/*.py']},
+    install_requires=['PyGithub', 'setuptools', 'wheel'],
     entry_points={
         'console_scripts': [
             'cronohub=cronohub.cronohub:main',

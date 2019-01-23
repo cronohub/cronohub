@@ -1,16 +1,18 @@
-import os
-import logging
-import sys
 import argparse
+import logging
+import os
+import sys
 from collections import namedtuple
-from colored import fg, bg, attr
-from github import Github, Repository
+from importlib import import_module
 from multiprocessing import Pool
 from pathlib import Path
-from subprocess import run, CalledProcessError
-from urllib.request import urlretrieve
+from subprocess import CalledProcessError, run
 from typing import List
+from urllib.request import urlretrieve
 
+import pkg_resources
+from colored import attr, bg, fg
+from github import Github, Repository
 
 logging.basicConfig(filename='cronohub.log',
                     filemode='a',
@@ -22,6 +24,7 @@ Repourl = namedtuple('Repourl', ['url', 'name'])
 parser = argparse.ArgumentParser(description='Cronohub')
 parser.add_argument('-a', action="store", default="scp", type=str, dest="plugin")
 args = parser.parse_args()
+archiver_plugin = None
 
 def get_repo_list() -> List[Repository.Repository]:
     """
@@ -46,6 +49,30 @@ def gather_archive_urls(repos: List[Repository.Repository]) -> List[Repourl]:
     """
     return list(map(lambda r: Repourl(url=r.get_archive_link(archive_format="zipball"), name=r.name), repos))
 
+def load_plugin():
+    global archiver_plugin
+    filepath = pkg_resources.resource_filename('plugins', '.')
+    path = Path(filepath)
+    found = False
+    plugin = ''
+    for p in path.iterdir():
+        if args.plugin in str(p):
+            found = True
+            plugin = p
+            break
+
+    if not found:
+        print('plugin %s not found in plugins' % args.plugin)
+        sys.exit(1)
+
+    archiver_plugin = import_module("plugins." + args.plugin, plugin)
+
+def archive(f: str):
+    """
+    Archive uses the set plugin to archive a file located at `f`.
+    """
+    archiver_plugin.archive(f)
+
 def download_and_archive(repo_url: Repourl):
     """
     Download a single URL. This is used by `download_urls` as the function
@@ -54,8 +81,8 @@ def download_and_archive(repo_url: Repourl):
     url, name = repo_url
     target = Path.cwd() / "target" / name
     logger.info("downloading: %s, to: %s with url: %s" % (name, target, url))
-    # urlretrieve(url, target)
-
+    urlretrieve(url, target)
+    archive(str(target))
 
 def download_and_archive_urls(urls: List[Repourl]):
     """
@@ -99,6 +126,10 @@ def main():
     if "CRONO_GITHUB_TOKEN" not in os.environ:
         print("Please set up a token by CRONO_GITHUB_TOKEN=<token>.")
         sys.exit(1)
+
+    # Load the plugin before trying to download a 100 archives only to
+    # find that the plugin was not copied where it should have been.
+    load_plugin()
 
     repo_list = Path(os.path.join(Path.home(), '.config', 'cronohub', '.repo_list'))
     only = []
