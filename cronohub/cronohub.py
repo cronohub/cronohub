@@ -7,7 +7,6 @@ from collections import namedtuple
 from importlib import import_module
 from multiprocessing import Pool
 from pathlib import Path
-from subprocess import CalledProcessError, run
 from typing import List
 from urllib.request import urlretrieve
 
@@ -27,6 +26,7 @@ parser.add_argument('-a', action="store", default="scp", type=str, dest="plugin"
 args = parser.parse_args()
 archiver_plugin = None
 
+
 def get_repo_list() -> List[Repository.Repository]:
     """
     Gather a list of remote forks for a given user.
@@ -44,11 +44,13 @@ def get_repo_list() -> List[Repository.Repository]:
             repos.append(repo)
     return repos
 
+
 def gather_archive_urls(repos: List[Repository.Repository]) -> List[Repourl]:
     """
     Gather a list of URLs for the repositories.
     """
     return list(map(lambda r: Repourl(url=r.get_archive_link(archive_format="zipball"), name=r.name), repos))
+
 
 def load_plugin():
     global archiver_plugin
@@ -68,12 +70,14 @@ def load_plugin():
 
     archiver_plugin = import_module("cronohub_plugins." + args.plugin, plugin)
 
+
 def archive(f: str):
     """
     Archive uses the set plugin to archive a file located at `f`.
     """
     logger.info("archiving %s with plugin %s" % (f, args.plugin))
     archiver_plugin.archive(f)
+
 
 def download_and_archive(repo_url: Repourl):
     """
@@ -88,6 +92,7 @@ def download_and_archive(repo_url: Repourl):
     urlretrieve(url, target)
     archive(str(target))
 
+
 def download_and_archive_urls(urls: List[Repourl]):
     """
     Multithreaded url downloader and archiver. As soon as a url is finished
@@ -100,10 +105,11 @@ def download_and_archive_urls(urls: List[Repourl]):
     """
     target = Path.cwd() / "target"
     if not target.exists():
-        os.makedirs(target)
+        os.makedirs(str(target))
 
     with Pool(5) as p:
         p.map(download_and_archive, urls)
+
 
 def main():
     """
@@ -115,13 +121,13 @@ def main():
     :return: None
     """
     swag = """
-	 _______  ______    _______  __    _  _______  __   __  __   __  _______
-	|       ||    _ |  |       ||  |  | ||       ||  | |  ||  | |  ||  _    |
-	|       ||   | ||  |   _   ||   |_| ||   _   ||  |_|  ||  | |  || |_|   |
-	|       ||   |_||_ |  | |  ||       ||  | |  ||       ||  |_|  ||       |
-	|      _||    __  ||  |_|  ||  _    ||  |_|  ||       ||       ||  _   |
-	|     |_ |   |  | ||       || | |   ||       ||   _   ||       || |_|   |
-	|_______||___|  |_||_______||_|  |__||_______||__| |__||_______||_______|
+     _______  ______    _______  __    _  _______  __   __  __   __  _______
+    |       ||    _ |  |       ||  |  | ||       ||  | |  ||  | |  ||  _    |
+    |       ||   | ||  |   _   ||   |_| ||   _   ||  |_|  ||  | |  || |_|   |
+    |       ||   |_||_ |  | |  ||       ||  | |  ||       ||  |_|  ||       |
+    |      _||    __  ||  |_|  ||  _    ||  |_|  ||       ||       ||  _   |
+    |     |_ |   |  | ||       || | |   ||       ||   _   ||       || |_|   |
+    |_______||___|  |_||_______||_|  |__||_______||__| |__||_______||_______|
 
     Beginning archiving...
     """
@@ -135,11 +141,11 @@ def main():
     # find that the plugin was not copied where it should have been.
     load_plugin()
 
-    repo_list = Path(os.path.join(Path.home(), '.config', 'cronohub', '.repo_list'))
+    repo_list = Path.home() / '.config' / 'cronohub' / '.repo_list'
     only = []
     if repo_list.is_file():
         logger.info('found configuration file... syncing repos from file')
-        with open(repo_list) as conf:
+        with open(str(repo_list)) as conf:
             for line in conf:
                 only.append(line.strip())
 
