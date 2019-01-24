@@ -52,9 +52,20 @@ def gather_archive_urls(repos: List[Repository.Repository]) -> List[Repourl]:
     return list(map(lambda r: Repourl(url=r.get_archive_link(archive_format="zipball"), name=r.name), repos))
 
 
-def load_plugin():
-    global archiver_plugin
+def load_from_plugin_folder() -> bool:
+    filepath = Path.home() / '.config' / 'cronohub' / 'plugins'
+    if not filepath.exists():
+        return False
+    return load_plugin(filepath)
+
+
+def load_from_resource_folder() -> bool:
     filepath = pkg_resources.resource_filename('cronohub_plugins', '.')
+    return load_plugin(filepath)
+
+
+def load_plugin(filepath: Path) -> bool:
+    global archiver_plugin
     path = Path(filepath)
     found = False
     plugin = ''
@@ -65,10 +76,27 @@ def load_plugin():
             break
 
     if not found:
-        print('plugin %s not found in plugins' % args.plugin)
-        sys.exit(1)
+        return False
 
     archiver_plugin = import_module("cronohub_plugins." + args.plugin, plugin)
+    return True
+
+
+def load_plugin_with_fallback():
+    """
+    First: ~/.config/cronohub/plugins
+        Return False if fails
+    Second: site-packages/cronohub-plugins
+        Returns False if fails
+    If the second stage fails the program exists with status code 1.
+    """
+    if load_from_plugin_folder():
+        logger.info("plugin loaded successfully")
+    elif load_from_resource_folder():
+        logger.info("plugin loaded successfully")
+    else:
+        print('plugin %s not found in ~/.config/cronohub/plugins or site-packages' % args.plugin)
+        sys.exit(1)
 
 
 def archive(f: str):
@@ -139,7 +167,7 @@ def main():
 
     # Load the plugin before trying to download a 100 archives only to
     # find that the plugin was not copied where it should have been.
-    load_plugin()
+    load_plugin_with_fallback()
 
     repo_list = Path.home() / '.config' / 'cronohub' / '.repo_list'
     only = []
