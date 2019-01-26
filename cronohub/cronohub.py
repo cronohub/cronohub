@@ -7,10 +7,30 @@ import pkg_resources
 from colored import attr, fg
 
 parser = argparse.ArgumentParser(description='Cronohub')
-parser.add_argument('-s', action="store", default="github", type=str, dest="source")
-parser.add_argument('-t', action="store", default="scp", type=str, dest="target")
-parser.add_argument('--source-help', action="store", default=None, type=str, dest="source_help")
-parser.add_argument('--target-help', action="store", default=None, type=str, dest="target_help")
+parser.add_argument('-s',
+                    action="store",
+                    default="github",
+                    type=str,
+                    dest="source",
+                    help="Name of the source plugin.")
+parser.add_argument('-t',
+                    action="store",
+                    default="scp",
+                    type=str,
+                    dest="target",
+                    help="Name of the target plugin.")
+parser.add_argument('--source-help',
+                    action="store",
+                    default=None,
+                    type=str,
+                    dest="source_help",
+                    help="Display help for a given source plugin.")
+parser.add_argument('--target-help',
+                    action="store",
+                    default=None,
+                    type=str,
+                    dest="target_help",
+                    help="Display help for a given target plugin.")
 args = parser.parse_args()
 
 
