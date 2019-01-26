@@ -2,7 +2,6 @@ import os
 from paramiko import SSHClient, SSHConfig
 from scp import SCPClient
 from cronohub import target_plugin
-from typing import List
 
 
 class TargetPlugin(target_plugin.CronohubTargetPlugin):

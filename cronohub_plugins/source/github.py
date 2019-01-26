@@ -28,7 +28,6 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
             print("Please set up a token by CRONO_GITHUB_TOKEN=<token>.")
             return False
 
-
     def help(self):
         print('''
         Help (github source plugin):

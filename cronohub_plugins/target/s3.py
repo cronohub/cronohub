@@ -1,7 +1,6 @@
 import boto3
 import os
 from cronohub import target_plugin
-from typing import List
 
 
 class TargetPlugin(target_plugin.CronohubTargetPlugin):
