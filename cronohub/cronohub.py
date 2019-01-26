@@ -26,13 +26,13 @@ def load_from_resource_folder() -> bool:
     return load_plugin(filepath)
 
 
-def load_plugin(filepath: Path) -> bool:
-    global archiver_plugin
+def load_plugin(name: str, filepath: Path) -> bool:
+    global source_plugin, target_plugin
     path = Path(filepath)
     found = False
     plugin = ''
     for p in path.iterdir():
-        if args.plugin in str(p):
+        if name in str(p):
             found = True
             plugin = p
             break
