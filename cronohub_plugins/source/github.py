@@ -27,6 +27,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         if "CRONO_GITHUB_TOKEN" not in os.environ:
             print("Please set up a token by CRONO_GITHUB_TOKEN=<token>.")
             return False
+        return True
 
     def help(self):
         print('''
@@ -63,7 +64,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         result = []
         with Pool(5) as p:
             result.append(p.map(self.download, urls))
-        return result
+        return result[0]
 
     def get_repo_list(self) -> List[Repository.Repository]:
         """

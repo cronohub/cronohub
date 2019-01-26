@@ -6,7 +6,7 @@ from cronohub import target_plugin
 
 class TargetPlugin(target_plugin.CronohubTargetPlugin):
     def __init__(self):
-        print('initialising S3 target plugin')
+        print('initialising SCP target plugin')
 
     def validate(self):
         print('validating')
