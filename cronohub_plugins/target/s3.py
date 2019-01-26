@@ -15,7 +15,12 @@ class TargetPlugin(target_plugin.CronohubTargetPlugin):
         return True
 
     def help(self):
-        print('help')
+        print('''
+        Help (s3 target plugin):
+            - Environment Property:
+                CRONOHUB_S3_BUCKETNAME: bucket name to use to upload the files to
+            - Requires a fully configured and working AWS cli environment for BOTO
+        ''')
 
     def archive(self, files):
         bucket = os.environ['CRONOHUB_S3_BUCKETNAME']

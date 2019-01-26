@@ -9,6 +9,8 @@ from colored import attr, fg
 parser = argparse.ArgumentParser(description='Cronohub')
 parser.add_argument('-s', action="store", default="github", type=str, dest="source")
 parser.add_argument('-t', action="store", default="scp", type=str, dest="target")
+parser.add_argument('--source-help', action="store", default=None, type=str, dest="source_help")
+parser.add_argument('--target-help', action="store", default=None, type=str, dest="target_help")
 args = parser.parse_args()
 
 
@@ -55,6 +57,22 @@ def load_plugin_with_fallback(t: str, name: str):
         return load_from_resource_folder(t, name)
 
 
+def display_help(t: str):
+    if t == 'source':
+        plugin = load_plugin_with_fallback(t, args.source_help)
+        if not plugin:
+            print('plugin %s not found' % args.source_help)
+            sys.exit(1)
+        plugin.SourcePlugin().help()
+    else:
+        plugin = load_plugin_with_fallback(t, args.target_help)
+        if not plugin:
+            print('plugin %s not found' % args.target_help)
+            sys.exit(1)
+        plugin.TargetPlugin().help()
+    sys.exit(0)
+
+
 def main():
     """
     The main of cronohub. Gathers the list of repositories to archive
@@ -77,6 +95,12 @@ def main():
     """
     print('%s %s %s' % (fg('cyan'), swag, attr('reset')))
 
+    if args.source_help:
+        display_help('source')
+
+    if args.target_help:
+        display_help('target')
+
     # Load the plugin before trying to download a 100 archives only to
     # find that the plugin was not copied where it should have been.
     source_plugin = load_plugin_with_fallback('source', args.source)
@@ -89,11 +113,13 @@ def main():
         sys.exit(1)
 
     sp = source_plugin.SourcePlugin()
-    sp.validate()
+    if not sp.validate():
+        sys.exit(1)
     # Display help if help is called.
 
     tp = target_plugin.TargetPlugin()
-    tp.validate()
+    if not tp.validate():
+        sys.exit(1)
     # display help if requested
 
     results = sp.fetch()

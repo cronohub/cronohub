@@ -10,13 +10,26 @@ class TargetPlugin(target_plugin.CronohubTargetPlugin):
 
     def validate(self):
         print('validating')
-        if "CRONOHUB_S3_BUCKETNAME" not in os.environ:
-            print('please provide CRONOHUB_S3_BUCKETNAME environment property for archiving.')
+        if "CRONOHUB_SCP_HOST" not in os.environ:
+            print('please provide CRONOHUB_SCP_HOST environment property for archiving.')
             return False
         return True
 
     def help(self):
-        print('help')
+        print('''
+        Help (scp target plugin):
+            - Environment Property:
+                CRONOHUB_SCP_HOST: host name to connect to. This can be one of two:
+            #1: a hostname as defined under ~/.ssh/config file exp:
+                Host pi
+                    HostName 1.2.3.4
+                    User username
+                    Port 1234
+                    IdentityFile ~/.ssh/id_rsa
+
+                In this case the environment property would be `pi`.
+            #2: an IP address or a web site address in which case it will be tried as is.
+        ''')
 
     def archive(self, files):
         print("scp-ing: ", files)
