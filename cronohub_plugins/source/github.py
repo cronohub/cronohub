@@ -1,14 +1,14 @@
 import os
 import time
+from cronohub import source_plugin
 from multiprocessing import Pool
 from pathlib import Path
 from typing import List
 from urllib.request import urlretrieve
-
 from github import Github, Repository
 
 
-class SourcePlugin:
+class SourcePlugin(source_plugin.CronohubSourcePlugin):
     """
     GithubPlugin: This is a CronoHub source plugin. The source
     is Github repositories for a given user. The user is determined
@@ -46,9 +46,9 @@ class SourcePlugin:
         filename = "{}_{}.zip".format(name, timestr)
         target = Path.cwd() / "target" / filename
         urlretrieve(url, target)
-        return url, name
+        return target, name
 
-    def download_urls(self, urls: List[(str, str)]) -> List[(str, str)]:
+    def download_urls(self, urls):
         """
         Multithreaded url downloader and archiver. As soon as a url is finished
         downloading it will be sent to the archiver function. Essentially this will
@@ -83,13 +83,13 @@ class SourcePlugin:
                 repos.append(repo)
         return repos
 
-    def gather_archive_urls(self, repos: List[Repository.Repository]) -> List[(str, str)]:
+    def gather_archive_urls(self, repos: List[Repository.Repository]):
         """
         Gather a list of URLs for the repositories.
         """
         return list(map(lambda r: (r.get_archive_link(archive_format="zipball"), r.name), repos))
 
-    def fetch(self) -> List[(str, str)]:
+    def fetch(self):
         repo_list = Path.home() / '.config' / 'cronohub' / '.repo_list'
         only = []
         if repo_list.is_file():

@@ -4,31 +4,28 @@ from importlib import import_module
 from pathlib import Path
 
 import pkg_resources
-from colored import attr, bg, fg
+from colored import attr, fg
 
 parser = argparse.ArgumentParser(description='Cronohub')
 parser.add_argument('-s', action="store", default="github", type=str, dest="source")
 parser.add_argument('-t', action="store", default="scp", type=str, dest="target")
 args = parser.parse_args()
-source_plugin = None
-target_plugin = None
 
 
-def load_from_plugin_folder() -> bool:
+def load_from_plugin_folder(t: str, name: str):
     filepath = Path.home() / '.config' / 'cronohub' / 'plugins'
     if not filepath.exists():
-        return False
-    return load_plugin(filepath)
+        return None
+    return load_plugin(t, name, filepath)
 
 
-def load_from_resource_folder() -> bool:
+def load_from_resource_folder(t: str, name: str):
     filepath = pkg_resources.resource_filename('cronohub_plugins', '.')
-    return load_plugin(filepath)
+    return load_plugin(t, name, filepath)
 
 
-def load_plugin(name: str, filepath: Path) -> bool:
-    global source_plugin, target_plugin
-    path = Path(filepath)
+def load_plugin(t: str, name: str, filepath: Path):
+    path = Path(filepath) / t
     found = False
     plugin = ''
     for p in path.iterdir():
@@ -38,13 +35,12 @@ def load_plugin(name: str, filepath: Path) -> bool:
             break
 
     if not found:
-        return False
+        return None
 
-    archiver_plugin = import_module("cronohub_plugins." + args.plugin, plugin)
-    return True
+    return import_module("cronohub_plugins." + t + "." + name, plugin)
 
 
-def load_plugin_with_fallback():
+def load_plugin_with_fallback(t: str, name: str):
     """
     First: ~/.config/cronohub/plugins
         Return False if fails
@@ -52,22 +48,11 @@ def load_plugin_with_fallback():
         Returns False if fails
     If the second stage fails the program exists with status code 1.
     """
-    if load_from_plugin_folder():
-        print('plugin successfully loaded')
-    elif load_from_resource_folder():
-        print("plugin loaded successfully")
+    p = load_from_plugin_folder(t, name)
+    if p:
+        return p
     else:
-        print('plugin %s not found in ~/.config/cronohub/plugins or site-packages' % args.plugin)
-        sys.exit(1)
-
-
-def archive(f: str):
-    """
-    Archive uses the set plugin to archive a file located at `f`.
-    """
-    print("archiving %s with plugin %s" % (f, args.plugin))
-    archiver_plugin.archive(f)
-
+        return load_from_resource_folder(t, name)
 
 
 def main():
@@ -92,10 +77,16 @@ def main():
     """
     print('%s %s %s' % (fg('cyan'), swag, attr('reset')))
 
-
     # Load the plugin before trying to download a 100 archives only to
     # find that the plugin was not copied where it should have been.
-    load_plugin_with_fallback()
+    source_plugin = load_plugin_with_fallback('source', args.source)
+    if not source_plugin:
+        print("source plugin '%s' not found!" % args.source)
+        sys.exit(1)
+    target_plugin = load_plugin_with_fallback('target', args.target)
+    if not target_plugin:
+        print("target plugin '%s' not found!" % args.target)
+        sys.exit(1)
 
     sp = source_plugin.SourcePlugin()
     sp.validate()

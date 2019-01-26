@@ -1,8 +1,10 @@
 import boto3
 import os
+from cronohub import target_plugin
+from typing import List
 
 
-class TargetPlugin:
+class TargetPlugin(target_plugin.CronohubTargetPlugin):
     def __init__(self):
         print('initialising S3 target plugin')
 
@@ -16,10 +18,11 @@ class TargetPlugin:
     def help(self):
         print('help')
 
-    def archive(self, file: str):
+    def archive(self, files):
         bucket = os.environ['CRONOHUB_S3_BUCKETNAME']
         s3 = boto3.client('s3')
-        filename = os.path.basename(file)
-        print('uploading %s to bucket %s' % (filename, bucket))
-        s3.upload_file(file, bucket, filename)
-        print('uploading complete')
+        for file in files:
+            filename = os.path.basename(file[0])
+            print('uploading %s to bucket %s' % (filename, bucket))
+            s3.upload_file(file, bucket, filename)
+            print('uploading complete')
