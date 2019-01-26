@@ -105,11 +105,11 @@ def main():
     # find that the plugin was not copied where it should have been.
     source_plugin = load_plugin_with_fallback('source', args.source)
     if not source_plugin:
-        print("source plugin '%s' not found!" % args.source)
+        print("source plugin %s'%s'%s not found!" % (fg('red'), args.source, attr('reset')))
         sys.exit(1)
     target_plugin = load_plugin_with_fallback('target', args.target)
     if not target_plugin:
-        print("target plugin '%s' not found!" % args.target)
+        print("target plugin %s'%s'%s not found!" % (fg('red'), args.target, attr('reset')))
         sys.exit(1)
 
     sp = source_plugin.SourcePlugin()
