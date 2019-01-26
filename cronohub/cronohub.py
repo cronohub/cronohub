@@ -132,12 +132,10 @@ def main():
     sp = source_plugin.SourcePlugin()
     if not sp.validate():
         sys.exit(1)
-    # Display help if help is called.
 
     tp = target_plugin.TargetPlugin()
     if not tp.validate():
         sys.exit(1)
-    # display help if requested
 
     results = sp.fetch()
     tp.archive(results)
