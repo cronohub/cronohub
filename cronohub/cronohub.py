@@ -75,11 +75,10 @@ def display_help(t: str):
 
 def main():
     """
-    The main of cronohub. Gathers the list of repositories to archive
-    and filters them based on a `.repos_list` file that can be located
-    under `~/.config/cronohub/.repo_list`. This file contains a list
-    of repository names which the user wishes to archive. Anything else
-    will be ignored.
+    The main of cronohub. Initialize the two plugins, source and target.
+    If either of them is missing, output an error message. If all is well,
+    call the plugin's validate function to see if everything is set up for
+    the plugin that it needs. If all is well again, call fetch and archive.
     :return: None
     """
     swag = """
@@ -101,8 +100,6 @@ def main():
     if args.target_help:
         display_help('target')
 
-    # Load the plugin before trying to download a 100 archives only to
-    # find that the plugin was not copied where it should have been.
     source_plugin = load_plugin_with_fallback('source', args.source)
     if not source_plugin:
         print("source plugin %s'%s'%s not found!" % (fg('red'), args.source, attr('reset')))
@@ -126,8 +123,3 @@ def main():
     tp.archive(results)
 
     print('All done. Good bye.')
-    # Load the source and target.
-    # Call the source which should provide a list of files to the archiver
-    # call archiver.
-    # Implement concurrent archiving too... Since now they are decopuled.
-
