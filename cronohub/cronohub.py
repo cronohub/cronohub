@@ -1,88 +1,48 @@
 import argparse
-import logging
-import os
-import time
 import sys
-from collections import namedtuple
 from importlib import import_module
-from multiprocessing import Pool
 from pathlib import Path
-from typing import List
-from urllib.request import urlretrieve
 
 import pkg_resources
-from colored import attr, bg, fg
-from github import Github, Repository
+from colored import attr, fg
 
-logging.basicConfig(filename='cronohub.log',
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    datefmt='%H:%M:%S',
-                    level=logging.INFO)
-logger = logging.getLogger('cronohub_logger')
-Repourl = namedtuple('Repourl', ['url', 'name'])
 parser = argparse.ArgumentParser(description='Cronohub')
-parser.add_argument('-a', action="store", default="scp", type=str, dest="plugin")
+parser.add_argument('-s', action="store", default="github", type=str, dest="source")
+parser.add_argument('-t', action="store", default="scp", type=str, dest="target")
+parser.add_argument('--source-help', action="store", default=None, type=str, dest="source_help")
+parser.add_argument('--target-help', action="store", default=None, type=str, dest="target_help")
 args = parser.parse_args()
-archiver_plugin = None
 
 
-def get_repo_list() -> List[Repository.Repository]:
-    """
-    Gather a list of remote forks for a given user.
-    Only repositories are selected for which the given user is an owner.
-    This prevents the inclusion of Company based forks.
-
-    :return: List[Repository.Repository]
-        A list of remote forks for the current user.
-    """
-    g = Github(os.environ['CRONO_GITHUB_TOKEN'])
-    repos = []
-    user = g.get_user()
-    for repo in user.get_repos(type="owner"):
-        if not repo.fork:
-            repos.append(repo)
-    return repos
-
-
-def gather_archive_urls(repos: List[Repository.Repository]) -> List[Repourl]:
-    """
-    Gather a list of URLs for the repositories.
-    """
-    return list(map(lambda r: Repourl(url=r.get_archive_link(archive_format="zipball"), name=r.name), repos))
-
-
-def load_from_plugin_folder() -> bool:
+def load_from_plugin_folder(t: str, name: str):
     filepath = Path.home() / '.config' / 'cronohub' / 'plugins'
     if not filepath.exists():
-        return False
-    return load_plugin(filepath)
+        return None
+    return load_plugin(t, name, filepath)
 
 
-def load_from_resource_folder() -> bool:
+def load_from_resource_folder(t: str, name: str):
     filepath = pkg_resources.resource_filename('cronohub_plugins', '.')
-    return load_plugin(filepath)
+    return load_plugin(t, name, filepath)
 
 
-def load_plugin(filepath: Path) -> bool:
-    global archiver_plugin
-    path = Path(filepath)
+def load_plugin(t: str, name: str, filepath: Path):
+    path = Path(filepath) / t
     found = False
     plugin = ''
     for p in path.iterdir():
-        if args.plugin in str(p):
+        if name in str(p):
             found = True
             plugin = p
             break
 
     if not found:
-        return False
+        return None
 
-    archiver_plugin = import_module("cronohub_plugins." + args.plugin, plugin)
-    return True
+    return import_module("cronohub_plugins." + t + "." + name, plugin)
 
 
-def load_plugin_with_fallback():
+def load_plugin_with_fallback(t: str, name: str):
     """
     First: ~/.config/cronohub/plugins
         Return False if fails
@@ -90,53 +50,27 @@ def load_plugin_with_fallback():
         Returns False if fails
     If the second stage fails the program exists with status code 1.
     """
-    if load_from_plugin_folder():
-        logger.info("plugin loaded successfully")
-    elif load_from_resource_folder():
-        logger.info("plugin loaded successfully")
+    p = load_from_plugin_folder(t, name)
+    if p:
+        return p
     else:
-        print('plugin %s not found in ~/.config/cronohub/plugins or site-packages' % args.plugin)
-        sys.exit(1)
+        return load_from_resource_folder(t, name)
 
 
-def archive(f: str):
-    """
-    Archive uses the set plugin to archive a file located at `f`.
-    """
-    logger.info("archiving %s with plugin %s" % (f, args.plugin))
-    archiver_plugin.archive(f)
-
-
-def download_and_archive(repo_url: Repourl):
-    """
-    Download a single URL. This is used by `download_urls` as the function
-    to map to.
-    """
-    url, name = repo_url
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    filename = "{}_{}.zip".format(name, timestr)
-    target = Path.cwd() / "target" / filename
-    logger.info("downloading: %s, to: %s with url: %s" % (name, target, url))
-    urlretrieve(url, target)
-    archive(str(target))
-
-
-def download_and_archive_urls(urls: List[Repourl]):
-    """
-    Multithreaded url downloader and archiver. As soon as a url is finished
-    downloading it will be sent to the archiver function. Essentially this will
-    also allow for multithreaded archiving. We could separate the two processes
-    and configure the archiving with a higher thread count, but since the bottleneck
-    would be the github api and downloading process it makes sense to upload as soon
-    as a download is finished instead of waiting for them all to finish and then
-    upload at a higher thread count.
-    """
-    target = Path.cwd() / "target"
-    if not target.exists():
-        os.makedirs(str(target))
-
-    with Pool(5) as p:
-        p.map(download_and_archive, urls)
+def display_help(t: str):
+    if t == 'source':
+        plugin = load_plugin_with_fallback(t, args.source_help)
+        if not plugin:
+            print('plugin %s not found' % args.source_help)
+            sys.exit(1)
+        plugin.SourcePlugin().help()
+    else:
+        plugin = load_plugin_with_fallback(t, args.target_help)
+        if not plugin:
+            print('plugin %s not found' % args.target_help)
+            sys.exit(1)
+        plugin.TargetPlugin().help()
+    sys.exit(0)
 
 
 def main():
@@ -161,29 +95,39 @@ def main():
     """
     print('%s %s %s' % (fg('cyan'), swag, attr('reset')))
 
-    if "CRONO_GITHUB_TOKEN" not in os.environ:
-        print("Please set up a token by CRONO_GITHUB_TOKEN=<token>.")
-        sys.exit(1)
+    if args.source_help:
+        display_help('source')
+
+    if args.target_help:
+        display_help('target')
 
     # Load the plugin before trying to download a 100 archives only to
     # find that the plugin was not copied where it should have been.
-    load_plugin_with_fallback()
+    source_plugin = load_plugin_with_fallback('source', args.source)
+    if not source_plugin:
+        print("source plugin %s'%s'%s not found!" % (fg('red'), args.source, attr('reset')))
+        sys.exit(1)
+    target_plugin = load_plugin_with_fallback('target', args.target)
+    if not target_plugin:
+        print("target plugin %s'%s'%s not found!" % (fg('red'), args.target, attr('reset')))
+        sys.exit(1)
 
-    repo_list = Path.home() / '.config' / 'cronohub' / '.repo_list'
-    only = []
-    if repo_list.is_file():
-        logger.info('found configuration file... syncing repos from file')
-        with open(str(repo_list)) as conf:
-            for line in conf:
-                only.append(line.strip())
+    sp = source_plugin.SourcePlugin()
+    if not sp.validate():
+        sys.exit(1)
+    # Display help if help is called.
 
-    logger.info('retrieving repositories for user')
-    repos = get_repo_list()
-    if len(only) > 0:
-        repos = list(filter(lambda r: r.name in only, repos))
+    tp = target_plugin.TargetPlugin()
+    if not tp.validate():
+        sys.exit(1)
+    # display help if requested
 
-    logger.info('Gathering archive urls for %d repositories.' % len(repos))
-    urls = gather_archive_urls(repos)
-    logger.info('Downloading archives.')
-    download_and_archive_urls(urls)
-    logger.info('All done. Good bye.')
+    results = sp.fetch()
+    tp.archive(results)
+
+    print('All done. Good bye.')
+    # Load the source and target.
+    # Call the source which should provide a list of files to the archiver
+    # call archiver.
+    # Implement concurrent archiving too... Since now they are decopuled.
+
