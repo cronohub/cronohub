@@ -50,13 +50,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
 
     def download_urls(self, urls):
         """
-        Multithreaded url downloader and archiver. As soon as a url is finished
-        downloading it will be sent to the archiver function. Essentially this will
-        also allow for multithreaded archiving. We could separate the two processes
-        and configure the archiving with a higher thread count, but since the bottleneck
-        would be the github api and downloading process it makes sense to upload as soon
-        as a download is finished instead of waiting for them all to finish and then
-        upload at a higher thread count.
+        Multithreaded url downloader.
         """
         target = Path.cwd() / "target"
         if not target.exists():
@@ -85,7 +79,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
 
     def gather_archive_urls(self, repos: List[Repository.Repository]):
         """
-        Gather a list of URLs for the repositories.
+        Gather a list of archive links for the repositories.
         """
         return list(map(lambda r: (r.get_archive_link(archive_format="zipball"), r.name), repos))
 
