@@ -3,3 +3,4 @@ colored
 scp
 paramiko
 boto3
+python-gitlab

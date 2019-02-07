@@ -34,6 +34,8 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         Help (github source plugin):
             - Environment Property:
                 CRONO_GITHUB_TOKEN: a token with access to listing repositories for a given user.
+            - File that filters the list of repositories to archive. If not present, all will be archived.
+                ~/.config/cronohub/.repo_list
         ''')
 
     def download(self, repo_url: (str, str)) -> (str, str):
