@@ -30,12 +30,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         return projects
 
     def fetch(self):
-        # https://gitlab.com/Skarlso/testproject/-/archive/master/testproject-master.tar
-        # zipfn = "___artifacts.zip"
-        # with open(zipfn, "wb") as f:
-        #     build_or_job.artifacts(streamed=True, action=f.write)
-        # print("downloading archives")
-        gitlab_id = 'global'
+        gitlab_id = 'gitlab'
         if 'CRONOHUB_GITLAB_ID' in os.environ:
             gitlab_id = os.environ['CRONOHUB_GITLAB_ID']
 
@@ -57,7 +52,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
                 export.refresh()
 
             timestr = time.strftime("%Y%m%d-%H%M%S")
-            filename = "{}_{}.zip".format(p.name(), timestr)
+            filename = "{}_{}.gz".format(p.get_id(), timestr)
             t = Path.cwd() / 'target' / filename
             # Download the result
             with open(str(t), 'wb') as f:
