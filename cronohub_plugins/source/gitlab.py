@@ -13,12 +13,15 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         print("initialising gitlab archiver plugin")
 
     def help(self):
-        print("Gitlab config file under ~/.config/cronohub/gitlab.cfg")
+        print('''Help:
+            Gitlab config file under ~/.config/cronohub/gitlab.cfg
+            [Optional]: Environment Property: CRONOHUB_GITLAB_ID
+        ''')
 
     def validate(self):
-        self.cfg_file = Path.home() / '.config' / 'cronohub' / 'gitlab.cfg'
+        self.cfg_file = Path.home() / '.config' / 'cronohub' / 'source_gitlab.ini'
         if not self.cfg_file.exists():
-            print('missing configuration file from ~/.config/cronohub/gitlab.cfg')
+            print('missing configuration file from ~/.config/cronohub/source_gitlab.ini')
             return False
         return True
 
@@ -32,12 +35,19 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         # with open(zipfn, "wb") as f:
         #     build_or_job.artifacts(streamed=True, action=f.write)
         # print("downloading archives")
-        self.gl = Gitlab.from_config(gitlab_id='global', config_files=[self.cfg_file])
+        gitlab_id = 'global'
+        if 'CRONOHUB_GITLAB_ID' in os.environ:
+            gitlab_id = os.environ['CRONOHUB_GITLAB_ID']
+
+        target = Path.cwd() / 'target'
+        if not target.exists():
+            os.makedirs(str(target))
+
+        self.gl = Gitlab.from_config(gitlab_id=gitlab_id, config_files=[self.cfg_file])
         projects = self.get_repo_list()
         p: v4.objects.Project
         for p in projects:
             # Create the export
-            # p = gl.projects.get(project)
             export = p.exports.create({})
 
             # Wait for the 'finished' status
@@ -46,6 +56,9 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
                 time.sleep(1)
                 export.refresh()
 
+            timestr = time.strftime("%Y%m%d-%H%M%S")
+            filename = "{}_{}.zip".format(p.name(), timestr)
+            t = Path.cwd() / 'target' / filename
             # Download the result
-            with open('/tmp/export.tgz', 'wb') as f:
+            with open(str(t), 'wb') as f:
                 export.download(streamed=True, action=f.write)
