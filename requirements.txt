@@ -1,6 +1,6 @@
-PyGithub
-colored
-scp
-paramiko
 boto3
+colored
+paramiko
+PyGithub
 python-gitlab
+scp
