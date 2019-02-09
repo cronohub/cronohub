@@ -30,6 +30,7 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
         return projects
 
     def fetch(self):
+        paths = []
         gitlab_id = 'gitlab'
         if 'CRONOHUB_GITLAB_ID' in os.environ:
             gitlab_id = os.environ['CRONOHUB_GITLAB_ID']
@@ -52,8 +53,10 @@ class SourcePlugin(source_plugin.CronohubSourcePlugin):
                 export.refresh()
 
             timestr = time.strftime("%Y%m%d-%H%M%S")
-            filename = "{}_{}.gz".format(p.get_id(), timestr)
+            filename = "{}_{}.gz".format(p.name, timestr)
             t = Path.cwd() / 'target' / filename
-            # Download the result
+            # (Location, Filename) tuple
+            paths.append((str(t), filename))
             with open(str(t), 'wb') as f:
                 export.download(streamed=True, action=f.write)
+        return paths
