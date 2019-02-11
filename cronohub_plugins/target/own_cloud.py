@@ -1,13 +1,35 @@
 import owncloud
+import os
+from cronohub import target_plugin
 
-oc = owncloud.Client('http://domain.tld/owncloud')
 
-oc.login('user', 'password')
+class TargetPlugin(target_plugin.CronohubTargetPlugin):
+    def __init__(self):
+        print('initialising no op target plugin')
 
-oc.mkdir('testdir')
+    def validate(self):
+        for v in [
+            'CRONOHUB_OWNCLOUD_URL',
+            'CRONOHUB_OWNCLOUD_URL',
+            'CRONOHUB_OWNCLOUD_PASSWORD'
+        ]:
+            if v not in os.environ:
+                print("Please set %s environment variable." % v)
+                return False
+        return True
 
-oc.put_file('testdir/remotefile.txt', 'localfile.txt')
+    def help(self):
+        print('''
+        OwnCloud location URL: CRONOHUB_OWNCLOUD_URL (http://domain.tld/owncloud)
+        OwnCloud Username: CRONOHUB_OWNCLOUD_USERNAME (admin)
+        OwnCloud Password: CRONOHUB_OWNCLOUD_PASSWORD (admin)
+        ''')
 
-link_info = oc.share_file_with_link('testdir/remotefile.txt')
-
-print "Here is your link: " + link_info.get_link()
+    def archive(self, files):
+        url = os.environ('CRONOHUB_OWNCLOUD_URL')
+        user = os.environ('CRONOHUB_OWNCLOUD_USER')
+        password = os.environ('CRONOHUB_OWNCLOUD_PASSWORD')
+        oc = owncloud.Client(url)
+        oc.login(user, password)
+        for f in files:
+            oc.put_file(f[1], f[0])

@@ -1,5 +1,3 @@
-import boto3
-import os
 from cronohub import target_plugin
 
 
