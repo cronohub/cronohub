@@ -10,7 +10,7 @@ class TargetPlugin(target_plugin.CronohubTargetPlugin):
     def validate(self):
         for v in [
             'CRONOHUB_OWNCLOUD_URL',
-            'CRONOHUB_OWNCLOUD_URL',
+            'CRONOHUB_OWNCLOUD_USERNAME',
             'CRONOHUB_OWNCLOUD_PASSWORD'
         ]:
             if v not in os.environ:
@@ -26,10 +26,11 @@ class TargetPlugin(target_plugin.CronohubTargetPlugin):
         ''')
 
     def archive(self, files):
-        url = os.environ('CRONOHUB_OWNCLOUD_URL')
-        user = os.environ('CRONOHUB_OWNCLOUD_USER')
-        password = os.environ('CRONOHUB_OWNCLOUD_PASSWORD')
+        url = os.environ['CRONOHUB_OWNCLOUD_URL']
+        user = os.environ['CRONOHUB_OWNCLOUD_USERNAME']
+        password = os.environ['CRONOHUB_OWNCLOUD_PASSWORD']
         oc = owncloud.Client(url)
         oc.login(user, password)
         for f in files:
-            oc.put_file(f[1], f[0])
+            print("uploading %s..." % f[0])
+            oc.put_file(f[0], f[1])
