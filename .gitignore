@@ -7,4 +7,3 @@ build
 dist
 cronohub.egg-info
 .tox
-target
