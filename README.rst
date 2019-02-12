@@ -1,4 +1,16 @@
-cronohub
+Cronohub
 ========
 
-The main repository for dealing with downloading and archiving repositories
+Archive from anywhere to anywhere.
+
+How does it work?
+=================
+
+Install
+=======
+
+Usage
+=====
+
+Plugins
+=======
