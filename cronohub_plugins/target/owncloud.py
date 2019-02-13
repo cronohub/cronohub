@@ -20,7 +20,7 @@ class TargetPlugin(target_plugin.CronohubTargetPlugin):
 
     def help(self):
         print('''
-        OwnCloud location URL: CRONOHUB_OWNCLOUD_URL (http://domain.tld/owncloud)
+        OwnCloud location URL: CRONOHUB_OWNCLOUD_URL (https://username.ocloud.de)
         OwnCloud Username: CRONOHUB_OWNCLOUD_USERNAME (admin)
         OwnCloud Password: CRONOHUB_OWNCLOUD_PASSWORD (admin)
         ''')
