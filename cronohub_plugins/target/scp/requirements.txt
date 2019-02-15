@@ -1,0 +1,3 @@
+colored
+paramiko
+scp
