@@ -1,6 +1,6 @@
 import argparse
 import sys
-from importlib import import_module
+from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 
 import pkg_resources
@@ -53,21 +53,26 @@ def load_plugin(t: str, name: str, filepath: Path):
 
     if not found:
         return None
-    return import_module(str(plugin))
+    n = ""
+    if t == "source":
+        n = name + ".SourcePlugin"
+    else:
+        n = name + ".TargetPlugin"
+    p = plugin / name
+    p = str(p) + ".py"
+    spec = spec_from_file_location(n, p)
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def display_help(t: str):
     if t == 'source':
-        # plugin = load_from_plugin_folder(t, args.source_help)
-        # if not plugin:
-        #     print('plugin %s not found' % args.source_help)
-        #     sys.exit(1)
-        # print(plugin)
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("github.SourcePlugin", "/Users/gbrautigam/.config/cronohub/plugins/source/github/github.py")
-        foo = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(foo)
-        foo.SourcePlugin().help()
+        plugin = load_from_plugin_folder(t, args.source_help)
+        if not plugin:
+            print('plugin %s not found' % args.source_help)
+            sys.exit(1)
+        plugin.SourcePlugin().help()
     else:
         plugin = load_from_plugin_folder(t, args.target_help)
         if not plugin:
