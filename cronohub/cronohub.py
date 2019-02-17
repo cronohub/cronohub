@@ -53,17 +53,21 @@ def load_plugin(t: str, name: str, filepath: Path):
 
     if not found:
         return None
-
-    return import_module(name, str(plugin))
+    return import_module(str(plugin))
 
 
 def display_help(t: str):
     if t == 'source':
-        plugin = load_from_plugin_folder(t, args.source_help)
-        if not plugin:
-            print('plugin %s not found' % args.source_help)
-            sys.exit(1)
-        plugin.github.SourcePlugin().help()
+        # plugin = load_from_plugin_folder(t, args.source_help)
+        # if not plugin:
+        #     print('plugin %s not found' % args.source_help)
+        #     sys.exit(1)
+        # print(plugin)
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("github.SourcePlugin", "/Users/gbrautigam/.config/cronohub/plugins/source/github/github.py")
+        foo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(foo)
+        foo.SourcePlugin().help()
     else:
         plugin = load_from_plugin_folder(t, args.target_help)
         if not plugin:
