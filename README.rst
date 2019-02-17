@@ -1,3 +1,5 @@
+.. image:: logo/crono_logo.png
+
 Cronohub
 ========
 
