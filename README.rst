@@ -51,7 +51,7 @@ To see a help of cronohub simply access the help screen.
 Plugins
 =======
 
-The plugins are the sole of cronohub. They are constantly added and can be
+The plugins are the soul of cronohub. They are constantly added and can be
 very specific and for a single purpose or can be for a wider audience.
 Cronohub only provides a platform for all these plugins to exist and work
 together. Cronohub is a mediator in this case.
