@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
@@ -32,6 +33,12 @@ parser.add_argument('--target-help',
                     dest="target_help",
                     help="Display help for a given target plugin.")
 args = parser.parse_args()
+
+
+def check_environment():
+    config_path = Path.home() / '.config' / 'cronohub' / 'plugins'
+    if not config_path.exists():
+        os.makedirs(config_path)
 
 
 def load_from_plugin_folder(t: str, name: str):
@@ -102,6 +109,7 @@ def main():
     Beginning archiving...
     """
     print('%s %s %s' % (fg('cyan'), swag, attr('reset')))
+    check_environment()
 
     if args.source_help:
         display_help('source')
