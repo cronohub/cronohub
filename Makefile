@@ -15,7 +15,7 @@ build: $(PYTHON)
 	$(PYTHON) setup.py develop
 
 clean:
-	rm -rf $(VENV)
+	rm -rf build && rm -rf dist && rm -rf cronohub.egg-info
 
 test_dependencies:
 	$(INSTALL) -r test-requirements.txt

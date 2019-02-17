@@ -1,8 +1,1 @@
-boto3
 colored
-paramiko
-PyGithub
-pyocclient
-python-gitlab
-request
-scp

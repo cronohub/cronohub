@@ -1,6 +1,6 @@
 import argparse
 import sys
-from importlib import import_module
+from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 
 import pkg_resources
@@ -41,11 +41,6 @@ def load_from_plugin_folder(t: str, name: str):
     return load_plugin(t, name, filepath)
 
 
-def load_from_resource_folder(t: str, name: str):
-    filepath = pkg_resources.resource_filename('cronohub_plugins', '.')
-    return load_plugin(t, name, filepath)
-
-
 def load_plugin(t: str, name: str, filepath: Path):
     path = Path(filepath) / t
     found = False
@@ -58,34 +53,28 @@ def load_plugin(t: str, name: str, filepath: Path):
 
     if not found:
         return None
-
-    return import_module("cronohub_plugins." + t + "." + name, plugin)
-
-
-def load_plugin_with_fallback(t: str, name: str):
-    """
-    First: ~/.config/cronohub/plugins
-        Return False if fails
-    Second: site-packages/cronohub-plugins
-        Returns False if fails
-    If the second stage fails the program exists with status code 1.
-    """
-    p = load_from_plugin_folder(t, name)
-    if p:
-        return p
+    n = ""
+    if t == "source":
+        n = name + ".SourcePlugin"
     else:
-        return load_from_resource_folder(t, name)
+        n = name + ".TargetPlugin"
+    p = plugin / name
+    p = str(p) + ".py"
+    spec = spec_from_file_location(n, p)
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def display_help(t: str):
     if t == 'source':
-        plugin = load_plugin_with_fallback(t, args.source_help)
+        plugin = load_from_plugin_folder(t, args.source_help)
         if not plugin:
             print('plugin %s not found' % args.source_help)
             sys.exit(1)
         plugin.SourcePlugin().help()
     else:
-        plugin = load_plugin_with_fallback(t, args.target_help)
+        plugin = load_from_plugin_folder(t, args.target_help)
         if not plugin:
             print('plugin %s not found' % args.target_help)
             sys.exit(1)
@@ -120,11 +109,11 @@ def main():
     if args.target_help:
         display_help('target')
 
-    source_plugin = load_plugin_with_fallback('source', args.source)
+    source_plugin = load_from_plugin_folder('source', args.source)
     if not source_plugin:
         print("source plugin %s'%s'%s not found!" % (fg('red'), args.source, attr('reset')))
         sys.exit(1)
-    target_plugin = load_plugin_with_fallback('target', args.target)
+    target_plugin = load_from_plugin_folder('target', args.target)
     if not target_plugin:
         print("target plugin %s'%s'%s not found!" % (fg('red'), args.target, attr('reset')))
         sys.exit(1)
