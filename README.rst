@@ -10,7 +10,7 @@ How does it work?
 
 Cronohub in it's own is useless. It's power comes from plugins located here
 plugins_repository_. These plugins are used as **source** and **target**.
-Examples are under the _plugins sections. Once an appropriate plugin is
+Examples are under the plugins_ sections. Once an appropriate plugin is
 selected for downloading and uploading, cronohub takes care of the rest.
 
 For example to download all repositories for a user from github and then
