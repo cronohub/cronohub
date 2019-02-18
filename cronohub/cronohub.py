@@ -39,6 +39,9 @@ def check_environment():
     config_path = Path.home() / '.config' / 'cronohub' / 'plugins'
     if not config_path.exists():
         os.makedirs(config_path)
+    configurations = Path.home() / '.config' / 'cronohub' / 'configurations'
+    if not configurations.exists():
+        os.makedirs(configurations)
 
 
 def load_from_plugin_folder(t: str, name: str):
